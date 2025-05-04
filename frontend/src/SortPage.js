@@ -25,6 +25,7 @@ import {
 import axios from 'axios';
 import { useAuth } from './AuthContext';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 function SortPage() {
     const location = useLocation();
@@ -152,9 +153,18 @@ function SortPage() {
     return (
         <Container maxWidth="lg">
             <Box sx={{ my: 4 }}>
-                <Typography variant="h4" gutterBottom>
-                    Sort Playlist: {playlist?.snippet.title}
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                    <IconButton
+                        onClick={() => navigate('/', { state: { channelId: location.state?.channelId } })}
+                        sx={{ mr: 2 }}
+                        color="primary"
+                    >
+                        <ArrowBackIcon />
+                    </IconButton>
+                    <Typography variant="h4">
+                        Sort Playlist: {playlist?.snippet.title}
+                    </Typography>
+                </Box>
 
                 <Grid container spacing={4}>
                     <Grid item xs={12} md={4}>

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import {
     Container,
     Box,
@@ -55,9 +55,10 @@ function HomePage() {
     const [channelId, setChannelId] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
     const { isAuthenticated } = useAuth();
 
-    const fetchPlaylists = async () => {
+    const fetchPlaylists = useCallback(async () => {
         if (!channelId) return;
 
         try {
@@ -74,11 +75,23 @@ function HomePage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [channelId]);
+
+    useEffect(() => {
+        if (location.state?.channelId) {
+            setChannelId(location.state.channelId);
+        }
+    }, [location.state]);
+
+    useEffect(() => {
+        if (channelId) {
+            fetchPlaylists();
+        }
+    }, [channelId, fetchPlaylists]);
 
     const handlePlaylistSelect = (playlist) => {
         setSelectedPlaylist(playlist);
-        navigate('/sort', { state: { playlist } });
+        navigate('/sort', { state: { playlist, channelId } });
     };
 
     if (!isAuthenticated) {
