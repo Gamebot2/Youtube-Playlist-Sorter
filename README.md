@@ -1,5 +1,7 @@
 # YouTube Playlist Sorter
 
+(This project was entirely vibe-coded, just for fun)
+
 A React + Flask application that allows you to view and manage YouTube playlists.
 
 ## Prerequisites

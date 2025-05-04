@@ -3,6 +3,7 @@ frontend/node_modules/
 backend/venv/
 backend/.env
 backend/client_secrets.json
+github-personal-access-token
 
 
 # Environment variables
