@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import {
     Container,
     Box,
@@ -23,6 +24,7 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import { useAuth } from './AuthContext';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 
 function SortPage() {
     const location = useLocation();
@@ -35,6 +37,7 @@ function SortPage() {
     const [newPlaylistName, setNewPlaylistName] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isSorting, setIsSorting] = useState(false);
+    const [hasManualOrder, setHasManualOrder] = useState(false);
 
     useEffect(() => {
         if (!playlist) {
@@ -47,24 +50,26 @@ function SortPage() {
 
     useEffect(() => {
         // Sort items locally when sort options change
-        setItems(prevItems => {
-            const sortedItems = [...prevItems];
-            sortedItems.sort((a, b) => {
-                let comparison = 0;
-                if (sortBy === 'title') {
-                    comparison = (a.snippet?.title || '').localeCompare(b.snippet?.title || '');
-                } else if (sortBy === 'date') {
-                    const dateA = new Date(a.snippet?.publishedAt || 0);
-                    const dateB = new Date(b.snippet?.publishedAt || 0);
-                    comparison = dateA - dateB;
-                } else if (sortBy === 'channel') {
-                    comparison = (a.snippet?.videoOwnerChannelTitle || '').localeCompare(b.snippet?.videoOwnerChannelTitle || '');
-                }
-                return order === 'asc' ? comparison : -comparison;
+        if (!hasManualOrder) {
+            setItems(prevItems => {
+                const sortedItems = [...prevItems];
+                sortedItems.sort((a, b) => {
+                    let comparison = 0;
+                    if (sortBy === 'title') {
+                        comparison = (a.snippet?.title || '').localeCompare(b.snippet?.title || '');
+                    } else if (sortBy === 'date') {
+                        const dateA = new Date(a.snippet?.publishedAt || 0);
+                        const dateB = new Date(b.snippet?.publishedAt || 0);
+                        comparison = dateA - dateB;
+                    } else if (sortBy === 'channel') {
+                        comparison = (a.snippet?.videoOwnerChannelTitle || '').localeCompare(b.snippet?.videoOwnerChannelTitle || '');
+                    }
+                    return order === 'asc' ? comparison : -comparison;
+                });
+                return sortedItems;
             });
-            return sortedItems;
-        });
-    }, [sortBy, order]);
+        }
+    }, [sortBy, order, hasManualOrder]);
 
     const fetchPlaylistItems = async () => {
         try {
@@ -108,6 +113,27 @@ function SortPage() {
         }
     };
 
+    const handleDragEnd = (result) => {
+        if (!result.destination) return;
+
+        const itemsCopy = Array.from(items);
+        const [reorderedItem] = itemsCopy.splice(result.source.index, 1);
+        itemsCopy.splice(result.destination.index, 0, reorderedItem);
+
+        setItems(itemsCopy);
+        setHasManualOrder(true);
+    };
+
+    const handleSortByChange = (e) => {
+        setSortBy(e.target.value);
+        setHasManualOrder(false);
+    };
+
+    const handleOrderChange = (e) => {
+        setOrder(e.target.value);
+        setHasManualOrder(false);
+    };
+
     if (!isAuthenticated) {
         return (
             <Container maxWidth="md">
@@ -137,7 +163,7 @@ function SortPage() {
                                 <InputLabel>Sort By</InputLabel>
                                 <Select
                                     value={sortBy}
-                                    onChange={(e) => setSortBy(e.target.value)}
+                                    onChange={handleSortByChange}
                                     label="Sort By"
                                 >
                                     <MenuItem value="title">Title</MenuItem>
@@ -150,7 +176,7 @@ function SortPage() {
                                 <InputLabel>Order</InputLabel>
                                 <Select
                                     value={order}
-                                    onChange={(e) => setOrder(e.target.value)}
+                                    onChange={handleOrderChange}
                                     label="Order"
                                 >
                                     <MenuItem value="asc">Ascending</MenuItem>
@@ -202,33 +228,65 @@ function SortPage() {
                                         background: '#555',
                                     }
                                 }}>
-                                    <List>
-                                        {items.map((item) => (
-                                            <ListItem key={item.id}>
-                                                <ListItemAvatar>
-                                                    <Avatar
-                                                        variant="rounded"
-                                                        src={item.snippet.thumbnails?.default?.url}
-                                                        sx={{ width: 120, height: 68 }}
-                                                    />
-                                                </ListItemAvatar>
-                                                <ListItemText
-                                                    primary={item.snippet.title}
-                                                    secondary={
-                                                        <>
-                                                            <Typography variant="body2" component="span">
-                                                                {item.snippet.videoOwnerChannelTitle}
-                                                            </Typography>
-                                                            <Typography variant="body2" component="span" sx={{ ml: 2 }}>
-                                                                {new Date(item.snippet.publishedAt).toLocaleDateString()}
-                                                            </Typography>
-                                                        </>
-                                                    }
-                                                    sx={{ ml: 2 }}
-                                                />
-                                            </ListItem>
-                                        ))}
-                                    </List>
+                                    <DragDropContext onDragEnd={handleDragEnd}>
+                                        <Droppable droppableId="playlist-items">
+                                            {(provided) => (
+                                                <List {...provided.droppableProps} ref={provided.innerRef}>
+                                                    {items.map((item, index) => (
+                                                        <Draggable key={item.id} draggableId={item.id} index={index}>
+                                                            {(provided) => (
+                                                                <ListItem
+                                                                    ref={provided.innerRef}
+                                                                    {...provided.draggableProps}
+                                                                    {...provided.dragHandleProps}
+                                                                    sx={{
+                                                                        '&:hover': {
+                                                                            backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    <IconButton
+                                                                        {...provided.dragHandleProps}
+                                                                        sx={{
+                                                                            mr: 1,
+                                                                            color: 'text.secondary',
+                                                                            '&:hover': {
+                                                                                backgroundColor: 'transparent',
+                                                                            },
+                                                                        }}
+                                                                    >
+                                                                        <DragIndicatorIcon />
+                                                                    </IconButton>
+                                                                    <ListItemAvatar>
+                                                                        <Avatar
+                                                                            variant="rounded"
+                                                                            src={item.snippet.thumbnails?.default?.url}
+                                                                            sx={{ width: 120, height: 68 }}
+                                                                        />
+                                                                    </ListItemAvatar>
+                                                                    <ListItemText
+                                                                        primary={item.snippet.title}
+                                                                        secondary={
+                                                                            <>
+                                                                                <Typography variant="body2" component="span">
+                                                                                    {item.snippet.videoOwnerChannelTitle}
+                                                                                </Typography>
+                                                                                <Typography variant="body2" component="span" sx={{ ml: 2 }}>
+                                                                                    {new Date(item.snippet.publishedAt).toLocaleDateString()}
+                                                                                </Typography>
+                                                                            </>
+                                                                        }
+                                                                        sx={{ ml: 2 }}
+                                                                    />
+                                                                </ListItem>
+                                                            )}
+                                                        </Draggable>
+                                                    ))}
+                                                    {provided.placeholder}
+                                                </List>
+                                            )}
+                                        </Droppable>
+                                    </DragDropContext>
                                 </Box>
                             </Paper>
                         )}

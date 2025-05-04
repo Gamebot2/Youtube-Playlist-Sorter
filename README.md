@@ -56,14 +56,3 @@ npm start
 2. Enter a YouTube channel ID in the input field
 3. Click "Fetch Playlists" to view the channel's playlists
 4. Select a playlist to view and manage its videos
-
-## Features
-
-- View playlists from any YouTube channel
-- Modern, responsive UI using Material-UI
-
-## Security Notes
-
-- Never commit your `.env` file to version control
-- Keep your API key secure
-- The application uses secure HTTPS endpoints for all API calls 
