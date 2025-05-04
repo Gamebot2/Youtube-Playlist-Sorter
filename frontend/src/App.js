@@ -44,7 +44,7 @@ function AuthButton() {
             onClick={isAuthenticated ? logout : login}
             disabled={isLoading}
         >
-            {isLoading ? <CircularProgress size={24} /> : (isAuthenticated ? "Logout" : "Login")}
+            {isLoading ? <CircularProgress size={24} /> : (isAuthenticated ? "Log out" : "Log in")}
         </Button>
     );
 }
@@ -145,7 +145,7 @@ function HomePage() {
                     onClick={fetchPlaylists}
                     disabled={!channelId || isLoading}
                 >
-                    {isLoading ? <CircularProgress size={24} /> : "Fetch Playlists"}
+                    {isLoading ? <CircularProgress size={24} /> : "Fetch playlists"}
                 </Button>
             </Box>
 
