@@ -24,6 +24,13 @@ import SortPage from './SortPage';
 import { ThemeContext, ThemeProvider } from './ThemeContext';
 import { AuthProvider, useAuth } from './AuthContext';
 
+// Add global styles for buttons
+const globalStyles = {
+    '.MuiButton-root': {
+        textTransform: 'none',
+    },
+};
+
 function ThemeToggle() {
     const { darkMode, toggleTheme } = React.useContext(ThemeContext);
     return (
@@ -191,12 +198,14 @@ function App() {
     return (
         <MuiThemeProvider theme={theme}>
             <CssBaseline />
-            <Router>
-                <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/sort" element={<SortPage />} />
-                </Routes>
-            </Router>
+            <Box sx={globalStyles}>
+                <Router>
+                    <Routes>
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/sort" element={<SortPage />} />
+                    </Routes>
+                </Router>
+            </Box>
         </MuiThemeProvider>
     );
 }
